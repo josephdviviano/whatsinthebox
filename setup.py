@@ -10,12 +10,11 @@ setup(
     packages=find_packages(include=['witb', 'witb.*']),
     python_requires='>=3.6',
     install_requires=[
-        'flake8',
-        'flake8-docstrings',
-        'pytest>=4.6',
-        'sphinx',
-        'joblib',
-        'torch'],
+        'numpy',
+        'scipy',
+        'matplotlib',
+        'seaborn',
+        'nltk'],
     entry_points={
         'console_scripts': [
             'main=witb.main:main'
