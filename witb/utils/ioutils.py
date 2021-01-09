@@ -4,11 +4,14 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-import gzip
-import logging
 from urllib.parse import urlparse
 from witb.globals import HEADER
-
+from witb.utils import nlp
+import csv
+import gzip
+import logging
+import yaml
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +62,9 @@ class Document():
 
     def __repr__(self):
         if 0 < len(self.content) < 100:
-            return self.content
+            return ' '.join(self.content)
         elif len(self.content) > 100:
-            return self.content[:100] + '...'
+            return ' '.join(self.content[:100]) + '...'
         else:
             return 'N/A'
 
@@ -70,10 +73,12 @@ def parse_data(entries, min_len=1, languages=['eng']):
     """Yield each entry as a structured and pre-processed object."""
 
     n_doc, n_ok = len(entries), 0
+    cleaner = nlp.Cleaner()  # Prepares the text.
 
     for entry in entries:
         doc = Document(entry)
         if len(doc.content) > min_len and doc.language in languages:
+            doc.content = cleaner.clean(doc.content)
             n_ok += 1
             yield doc
 
@@ -114,3 +119,41 @@ def get_entries(data):
             entry.append(line)
 
     return entries
+
+
+def read_yaml(yaml_file):
+    with open(yaml_file) as f:
+        return yaml.load(f, Loader=yaml.FullLoader)
+
+
+def parse_ngram_table(base_path, cfg):
+    """Parse all ngrams defined in the configuration into a hash table.
+    Args:
+        base_path (str): path of the wordlist configuration file.
+        cfg (dict): parsed wordlist configuration file.
+    Returns: A hash table of all parsed ngrams defined in the config, organized
+        by top-level keys.
+    """
+    ngram_table = {}
+    cfg = cfg['ngrams']
+
+    for k, v in cfg.items():
+        ngram_table[k] = {}  # Table is organized by category k.
+
+        # Each filename is expected to be a list of ngrams.
+        for filename in v:
+            ngrams = parse_ngram_file(os.path.join(base_path, filename))
+            ngram_table[k].update(ngrams)
+
+    return ngram_table
+
+
+def parse_ngram_file(csv_file):
+    """Parse a single ngram wordlist into a hashtable."""
+    ngrams = {}
+    with open(csv_file, newline='') as f:
+        for row in csv.reader(f):
+            ngram = tuple(row[0].split())
+            ngrams[ngram] = True
+
+    return ngrams
