@@ -30,7 +30,7 @@ def get_ngrams(text, unigrams=False, bigrams=True, trigrams=False):
     ngrams = []
 
     if unigrams:
-        ngrams.extend([tuple(w) for w in text])
+        ngrams.extend([tuple( (w,) ) for w in text])
     if bigrams:
         ngrams.extend([b for b in nltk.bigrams(text)])
     if trigrams:
