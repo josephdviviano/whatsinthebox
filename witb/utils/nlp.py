@@ -30,7 +30,7 @@ def get_ngrams(text, unigrams=False, bigrams=True, trigrams=False):
     ngrams = []
 
     if unigrams:
-        ngrams.extend(text)
+        ngrams.extend([tuple(w) for w in text])
     if bigrams:
         ngrams.extend([b for b in nltk.bigrams(text)])
     if trigrams:
@@ -47,9 +47,6 @@ def flag_docs(docs, ngrams, threshold=3):
         bigrams = get_ngrams(doc.content, unigrams=True, bigrams=True)
 
         for k in ngrams.keys():
-            if k == 'profanity':
-                import IPython; IPython.embed()
-
             count = sum([b in ngrams[k] for b in bigrams])
 
             if count > threshold:
