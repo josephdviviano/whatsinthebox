@@ -48,8 +48,6 @@ def flag_docs(docs, ngrams, threshold=3):
 
         for k in ngrams.keys():
             count = sum([b in ngrams[k] for b in bigrams])
-
-            if count > threshold:
-                flagged[k].append((doc, count))
+            flagged[k].append(count)
 
     return flagged
