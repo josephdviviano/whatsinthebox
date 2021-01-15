@@ -20,14 +20,6 @@ class SonarRunner():
             'hate_speech': 2}
         self.threshold = threshold
 
-    def proc_sentence(self, sentence):
-        """Results for a single sentence."""
-        labels = np.zeros(len(self.labels))
-        scores = np.zeros(len(self.labels))
-
-
-        return (labels, scores)
-
     def query(self, doc):
         """Runs all sentences across cores."""
         labels = np.zeros(len(self.labels))  # Per sentence counts of labels.
@@ -71,9 +63,9 @@ class DeLimit_Runner():
 
     def query(self, doc):
         """Runs all sentences across cores."""
-        if torch.cuda.is_available():    
+        if torch.cuda.is_available():
             device = torch.device("cuda")
-                   
+
         #TODO - not sure how to do this
         labels = np.zeros(len(self.labels))  # Per sentence counts of labels.
         scores = np.zeros(len(self.labels))  # Mean score per label.
@@ -84,7 +76,7 @@ class DeLimit_Runner():
 
         if n == 0:
             return np.concatenate([labels, scores])
-        
+
         #New stuff
         #I'm assigning a 'non-hate' label to each sentence as a proxy
         labels= [1] * len(sentences)
@@ -94,7 +86,7 @@ class DeLimit_Runner():
         input_ids = pad_sequences(input_ids, maxlen=20, dtype="long", truncating="post", padding="post")
         # Create attention masks (check if this works correctly)
         attention_masks = [float(i>0) for i in input_ids]
-        
+
         prediction_inputs = torch.tensor(input_ids)
         prediction_masks = torch.tensor(attention_masks)
         prediction_labels = torch.tensor(labels)
@@ -102,9 +94,9 @@ class DeLimit_Runner():
         #do we need a sampler? not sure
         prediction_sampler = SequentialSampler(prediction_data)
         prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=5, num_workers=1)
-            
+
         predictions , true_labels, pred_labels, eval_accuracy = [], [], [], []
-        # Predict 
+        # Predict
         for batch in prediction_dataloader:
           # Add batch to GPU
             batch = tuple(t.to(device) for t in batch)
@@ -124,11 +116,11 @@ class DeLimit_Runner():
             #eval_accuracy += tmp_eval_accuracy
 
             pred_labels+=list(np.argmax(logits, axis=1).flatten())
-     
-            
-            
-            
-            
+
+
+
+
+
             results = logits
             label = pred_labels
 
