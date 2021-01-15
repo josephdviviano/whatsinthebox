@@ -1,11 +1,12 @@
 #from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 from hatesonar import Sonar
-from multiprocessing import Pool
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import multiprocessing
 import numpy as np
 import pandas as pd
 import torch
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
+
 
 
 class SonarRunner():
@@ -49,38 +50,39 @@ class DeLimitRunner():
         self.labels = {
             'hate_speech': 0,
             'normal': 1}
-        self.tokenizer = AutoTokenizer.from_pretrained(
+        self._tokenizer = AutoTokenizer.from_pretrained(
             "Hate-speech-CNERG/dehatebert-mono-english")
         self.threshold = threshold
 
         if torch.cuda.is_available():
-            self.device = torch.device("cuda")
+            self._device = torch.device("cuda")
         else:
-            self.device = torch.device('cpu')
+            self._device = torch.device('cpu')
 
-        self.model.to(self.device)
+        self._model.to(self._device)
+        self._softmax = torch.nn.Softmax(dim=1)
 
     def query(self, doc):
         """Runs all sentences across cores."""
-        # TODO - not sure how to do this
         labels = np.zeros(len(self.labels))  # Per sentence counts of labels.
         scores = np.zeros(len(self.labels))  # Mean score per label.
 
         # Preprocess sentences (filter, add delimiters, tokenize).
         sentences = [s for s in doc.sentences if len(s) > self.threshold]
-        sentences = ["[CLS] " + sentence + " [SEP]" for sentence in sentences]
-        sentences = [self.tokenizer.tokenize(s, padding='max_length', truncation=True) for s in sentences]
-        sentences = [self.tokenizer.convert_tokens_to_ids(s) for s in sentences]
+        sentences = ["[CLS] " + s + " [SEP]" for s in sentences]
+        sentences = [self._tokenizer.tokenize(
+            s, padding='max_length', truncation=True) for s in sentences]
+        sentences = [
+            self._tokenizer.convert_tokens_to_ids(s) for s in sentences]
         n = len(sentences)
 
         # Create attention masks (check if this works correctly)
-        attention_masks = [float(i>0) for i in input_ids]
+        attention_masks = []
+        for sentence in sentences:
+            attention_masks.append([float(s > 0) for s in sentence])
 
         if n == 0:
             return np.concatenate([labels, scores])
-
-        #New stuff
-        #I'm assigning a 'non-hate' label to each sentence as a proxy
 
         # TODO: We are most likely going to remove this stuff unless we really
         #       need the dataloader to go fast (unclear).
@@ -90,38 +92,21 @@ class DeLimitRunner():
         #prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=5, num_workers=1)
 
         for sentence, mask in zip(sentences, attention_masks):
-            sentence = torch.tensor(sentence).to(self.device)
-            mask = torch.tensor(mask).to(self.device)
+            # We're squeezing / unsqueezing the batch dim.
+            sentence = torch.tensor(sentence).to(self._device).unsqueeze(0)
+            mask = torch.tensor(mask).to(self._device).unsqueeze(0)
 
             with torch.no_grad():
-                # TODO: might need to unsqueeze the batch dim.
-                logits = self.model(
+                logits = self._model(
                     sentence, token_type_ids=None, attention_mask=mask)[0]
 
-            logits = logits.detach().cpu().numpy()
-
-            # TODO: we need to append these results to lists.
-            #       One output per DOCUMENT, so combine results over sentences.
-            pred_labels += list(np.argmax(logits, axis=1).flatten())
-
-            #results = logits
-            #label = pred_labels
-            
-            for r in logits:
-                scores[self.labels[r['class_name']]] += r['confidence']
+            softmax = self._softmax(logits).detach().cpu().numpy()
+            labels[np.argmax(softmax, axis=1)] += 1  # Increment counter.
+            scores += softmax.squeeze()  # Remove batch dim and sum scores.
 
         scores /= n  # Take the mean.
 
-
-            # TODO Gets the numeric score for each class per sentence.
-            #for r in result['classes']:
-            #   scores[self.labels[r['class_name']]] += r['confidence']
-
-        #scores /= n
-
-        return np.concatenate([labels, results])
-
-
+        return np.concatenate([labels, scores])
 
 # XPLAIN
 #    "0": "hate speech",

@@ -135,15 +135,15 @@ def main(args, working_dir):
     # Hate speech / offensive text detection.
 
     #sonar_results = nlp.run_sonar(docs)
-    delimit_results= nlp.run_delimit(docs)
+    delimit_results = nlp.run_delimit(docs)
+
+    print('took {} MINS to parse all valid docs'.format(
+        (time.time() - start_time) / 60 ))
 
     import IPython; IPython.embed()
     # Merge all results into a single dict.
     results.update({'sonar': sonar_results, 'delimit': delimit_results})
     #
-
-    print('took {} MINS to parse all valid docs'.format(
-        (time.time() - start_time) / 60 ))
 
     with open(args.output, 'wb') as handle:
         pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
