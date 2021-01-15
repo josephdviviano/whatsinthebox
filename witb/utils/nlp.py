@@ -81,6 +81,6 @@ def run_delimit(docs):
     #    results.append(delimit.query(doc)
 
     delimit = models.DeLimitRunner()
-    results = p.map_async(delimit.query, docs)
+    results = p.map(delimit.query, docs)
 
     return np.vstack(results)
