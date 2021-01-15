@@ -19,5 +19,5 @@ TODO:
 
 **example usage**
 
-`witb/main.py --remote=https://commoncrawl.s3.amazonaws.com/crawl-data/CC-MAIN-2020-50/wet.paths.gz --idx=0 --output=outputs/test.pkl`
+`witb/main.py --remote=https://commoncrawl.s3.amazonaws.com/crawl-data/CC-MAIN-2020-50/wet.paths.gz --idx=0 --output=outputs/test.pkl --overwrite`
 
