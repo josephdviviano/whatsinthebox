@@ -134,9 +134,11 @@ def main(args, working_dir):
 
     # Hate speech / offensive text detection.
     sonar_results = nlp.run_sonar(docs)
+    #delimit_results= nlp.run_delimit(docs)
 
     # Merge all results into a single dict.
     results.update({'sonar': sonar_results})
+    #, 'delimit': delimit_results
 
     print('took {} MINS to parse all valid docs'.format(
         (time.time() - start_time) / 60 ))
@@ -151,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument('--file', help='local WET file.')
     parser.add_argument('--remote', help='remote WET file list.')
     parser.add_argument('--idx', help='idx of the remote shard.')
-    parser.add_argument('--output', help='output filename.', required=True)
+    parser.add_argument('--output', help='output pkl filename.', required=True)
     parser.add_argument('--overwrite',
         help='overwrite output if it exists', action='store_true')
     parser.set_defaults(overwrite=False)
