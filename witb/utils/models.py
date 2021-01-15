@@ -69,12 +69,8 @@ class DeLimitRunner():
         # Preprocess sentences (filter, add delimiters, tokenize).
         sentences = [s for s in doc.sentences if len(s) > self.threshold]
         sentences = ["[CLS] " + sentence + " [SEP]" for sentence in sentences]
-        sentences = [self.tokenizer.tokenize(s) for s in sentences]
+        sentences = [self.tokenizer.tokenize(s, padding='max_length', truncation=True) for s in sentences]
         sentences = [self.tokenizer.convert_tokens_to_ids(s) for s in sentences]
-        # TODO to fix? should be pytorch.
-        sentences = pad_sequences(sentences, maxlen=20, dtype="long",
-                                  truncating="post", padding="post")
-
         n = len(sentences)
 
         # Create attention masks (check if this works correctly)
@@ -99,7 +95,7 @@ class DeLimitRunner():
 
             with torch.no_grad():
                 # TODO: might need to unsqueeze the batch dim.
-                logits = model(
+                logits = self.model(
                     sentence, token_type_ids=None, attention_mask=mask)[0]
 
             logits = logits.detach().cpu().numpy()
@@ -108,8 +104,14 @@ class DeLimitRunner():
             #       One output per DOCUMENT, so combine results over sentences.
             pred_labels += list(np.argmax(logits, axis=1).flatten())
 
-            results = logits
-            label = pred_labels
+            #results = logits
+            #label = pred_labels
+            
+            for r in logits:
+                scores[self.labels[r['class_name']]] += r['confidence']
+
+        scores /= n  # Take the mean.
+
 
             # TODO Gets the numeric score for each class per sentence.
             #for r in result['classes']:

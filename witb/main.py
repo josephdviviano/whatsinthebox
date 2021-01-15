@@ -133,14 +133,14 @@ def main(args, working_dir):
     #results = nlp.count_ngram_matches(docs, ngrams)
 
     # Hate speech / offensive text detection.
+
     #sonar_results = nlp.run_sonar(docs)
     delimit_results= nlp.run_delimit(docs)
 
-    # Merge all results into a single dict.
-    results.update({'sonar': sonar_results})
     import IPython; IPython.embed()
-
-    #, 'delimit': delimit_results
+    # Merge all results into a single dict.
+    results.update({'sonar': sonar_results, 'delimit': delimit_results})
+    #
 
     print('took {} MINS to parse all valid docs'.format(
         (time.time() - start_time) / 60 ))
