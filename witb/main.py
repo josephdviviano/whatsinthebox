@@ -3,8 +3,7 @@ from pathlib import Path
 from typing import Iterable
 from typing import TextIO
 from witb.globals import DATA_DIR, WET_URL_ROOT, WET_URL_INDEX
-from witb.utils import ioutils
-from witb.utils import nlp
+from witb.utils import ioutils, nlp, models
 import argparse
 import functools
 import gzip
@@ -131,13 +130,19 @@ def main(args, working_dir):
         docs.append(doc)
 
     # Flag docs for matching bigrams.
-    ngram_counts = nlp.flag_docs(docs, ngrams, threshold=5)
+    results = nlp.count_ngram_matches(docs, ngrams)
+
+    # Hate speech / offensive text detection.
+    sonar_results = nlp.run_sonar(docs)
+
+    # Merge all results into a single dict.
+    results.update({'sonar': sonar_results})
 
     print('took {} MINS to parse all valid docs'.format(
         (time.time() - start_time) / 60 ))
 
     with open(args.output, 'wb') as handle:
-        pickle.dump(ngram_counts, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":

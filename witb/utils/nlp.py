@@ -1,8 +1,12 @@
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from witb.utils import models
 import re
 import string
+import numpy as np
+import multiprocessing
+from multiprocessing import Pool
 
 
 class Cleaner():
@@ -39,7 +43,7 @@ def get_ngrams(text, unigrams=False, bigrams=True, trigrams=False):
     return ngrams
 
 
-def flag_docs(docs, ngrams, threshold=3):
+def count_ngram_matches(docs, ngrams):
 
     flagged = {k: [] for k in ngrams.keys()}
 
@@ -51,3 +55,14 @@ def flag_docs(docs, ngrams, threshold=3):
             flagged[k].append(count)
 
     return flagged
+
+
+def run_sonar(docs):
+
+    n_workers = multiprocessing.cpu_count()
+    p = Pool(n_workers)
+
+    sonar = models.SonarRunner()
+    results = p.map(sonar.query, docs)
+
+    return np.vstack(results)

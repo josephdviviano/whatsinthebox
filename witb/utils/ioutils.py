@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class Document():
     def __init__(self, entry):
 
-        self.content = []
+        self.sentences = []
         self._header = {
             'WARC-Type': None,
             'WARC-Target-URI': None,
@@ -51,10 +51,10 @@ class Document():
                 self._header[prop] = val.strip()
             # Populate the content.
             else:
-                self.content.append(line)
+                self.sentences.append(line)
 
         # Merge the content into a single string.
-        self.content = '\n'.join(self.content)
+        self.content = '\n'.join(self.sentences)
 
         # Useful metadata.
         self.url = urlparse(self._header['WARC-Target-URI']).netloc
