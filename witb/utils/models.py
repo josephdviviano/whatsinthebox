@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.multiprocessing
+import time
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 
@@ -20,6 +21,8 @@ class SonarRunner():
 
     def query(self, doc):
         """Runs all sentences across cores."""
+
+
         labels = np.zeros(len(self.labels))  # Per sentence counts of labels.
         scores = np.zeros(len(self.labels))  # Mean score per label.
 
@@ -39,6 +42,7 @@ class SonarRunner():
                 scores[self.labels[r['class_name']]] += r['confidence']
 
         scores /= n  # Take the mean.
+
 
         return np.concatenate([labels, scores])
 
@@ -64,6 +68,7 @@ class DeLimitRunner():
 
     def query(self, doc):
         """Runs all sentences across cores."""
+        start_time = time.time()
         labels = np.zeros(len(self.labels))  # Per sentence counts of labels.
         scores = np.zeros(len(self.labels))  # Mean score per label.
 
@@ -105,6 +110,8 @@ class DeLimitRunner():
             scores += softmax.squeeze()  # Remove batch dim and sum scores.
 
         scores /= n  # Take the mean.
+        end_time = time.time()
+        print('doc in {} sec'.format(end_time-start_time))
 
         return np.concatenate([labels, scores])
 
