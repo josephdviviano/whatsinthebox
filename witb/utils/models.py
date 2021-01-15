@@ -53,14 +53,6 @@ class DeLimit_Runner():
         self.tokenizer = AutoTokenizer.from_pretrained("Hate-speech-CNERG/dehatebert-mono-english")
         self.threshold = threshold
 
-    def proc_sentence(self, sentence):
-        """Results for a single sentence."""
-        labels = np.zeros(len(self.labels))
-        scores = np.zeros(len(self.labels))
-
-
-        return (labels, scores)
-
     def query(self, doc):
         """Runs all sentences across cores."""
         if torch.cuda.is_available():
