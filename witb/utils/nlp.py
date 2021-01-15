@@ -57,6 +57,10 @@ def count_ngram_matches(docs, ngrams):
     return flagged
 
 
+def run_perplexity(docs):
+    pass
+
+
 def run_sonar(docs):
 
     n_workers = multiprocessing.cpu_count()
