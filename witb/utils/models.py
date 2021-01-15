@@ -41,7 +41,7 @@ class SonarRunner():
             for r in result['classes']:
                 scores[self.labels[r['class_name']]] += r['confidence']
 
-        scores /= n
+        scores /= n  # Take the mean.
 
         return np.concatenate([labels, scores])
 
