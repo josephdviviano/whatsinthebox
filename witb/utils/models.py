@@ -6,6 +6,8 @@ import pandas as pd
 import torch
 import torch.multiprocessing
 import time
+from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
+import os
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 
@@ -46,12 +48,11 @@ class SonarRunner():
 
         scores /= n  # Take the mean.
 
-
         return np.concatenate([labels, scores])
 
 
 class DeLimitRunner():
-    def __init__(self, threshold=20):
+    def __init__(self, threshold=20, max_sentences=30):
         self._model = AutoModelForSequenceClassification.from_pretrained(
             "Hate-speech-CNERG/dehatebert-mono-english")
         self.labels = {
@@ -60,6 +61,7 @@ class DeLimitRunner():
         self._tokenizer = AutoTokenizer.from_pretrained(
             "Hate-speech-CNERG/dehatebert-mono-english")
         self.threshold = threshold
+        self.max_sentences = int(max_sentences)
 
         if torch.cuda.is_available():
             self._device = torch.device("cuda")
@@ -71,12 +73,19 @@ class DeLimitRunner():
 
     def query(self, doc):
         """Runs all sentences across cores."""
+        os.environ['TOKENIZERS_PARALLELISM'] = 'false'
         start_time = time.time()
         labels = np.zeros(len(self.labels))  # Per sentence counts of labels.
         scores = np.zeros(len(self.labels))  # Mean score per label.
 
         # Preprocess sentences (filter, add delimiters, tokenize).
+        # Sentences must be > 20 characters.
         sentences = [s for s in doc.sentences if len(s) > self.threshold]
+
+        # Do the first n sentences only so we cap runtime.
+        if len(sentences) > self.max_sentences:
+            sentences = sentences[:self.max_sentences]
+
         sentences = ["[CLS] " + s + " [SEP]" for s in sentences]
         sentences = [self._tokenizer.tokenize(
             s, padding='max_length', truncation=True) for s in sentences]
@@ -94,12 +103,15 @@ class DeLimitRunner():
 
         # TODO: We are most likely going to remove this stuff unless we really
         #       need the dataloader to go fast (unclear).
-        #prediction_data = TensorDataset(prediction_inputs, prediction_masks)
-        #do we need a sampler? not sure
-        #prediction_sampler = SequentialSampler(prediction_data)
-        #prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=5, num_workers=1)
 
-        for sentence, mask in zip(sentences, attention_masks):
+        import IPython; IPython.embed()
+        dataset = TensorDataset(torch.Tensor(sentences), torch.Tensor(attention_masks))
+        sampler = SequentialSampler(dataset)
+        dataloader = DataLoader(dataset, sampler=sampler, batch_size=5,
+                                num_workers=1)
+
+
+        for batch in dataloader:
             # We're squeezing / unsqueezing the batch dim.
             sentence = torch.tensor(sentence).to(self._device).unsqueeze(0)
             mask = torch.tensor(mask).to(self._device).unsqueeze(0)
