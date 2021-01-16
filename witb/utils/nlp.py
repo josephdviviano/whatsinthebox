@@ -73,14 +73,14 @@ def run_sonar(docs):
 
 def run_delimit(docs):
 
-    n_workers = multiprocessing.cpu_count()
-    p = Pool(n_workers)
-
-    #results = []
-    #for doc in docs:
-    #    results.append(delimit.query(doc)
+    #n_workers = multiprocessing.cpu_count()
+    #p = Pool(n_workers)
 
     delimit = models.DeLimitRunner()
-    results = p.map(delimit.query, docs)
+    results = []
+    for doc in docs:
+        results.append(delimit.query(doc))
+
+    #results = p.map(delimit.query, docs)
 
     return np.vstack(results)

@@ -130,10 +130,10 @@ def main(args, working_dir):
         docs.append(doc)
 
     # Flag docs for matching bigrams.
-    results = nlp.count_ngram_matches(docs, ngrams)
+    #results = nlp.count_ngram_matches(docs, ngrams)
 
     # Hate speech / offensive text detection.
-    sonar_results = nlp.run_sonar(docs)
+    #sonar_results = nlp.run_sonar(docs)
     delimit_results = nlp.run_delimit(docs)
 
     print('took {} MINS to parse all valid docs'.format(

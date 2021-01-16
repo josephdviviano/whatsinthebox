@@ -101,28 +101,27 @@ class DeLimitRunner():
         if n == 0:
             return np.concatenate([labels, scores])
 
-        # TODO: We are most likely going to remove this stuff unless we really
-        #       need the dataloader to go fast (unclear).
-
-        import IPython; IPython.embed()
-        dataset = TensorDataset(torch.Tensor(sentences), torch.Tensor(attention_masks))
+        dataset = TensorDataset(torch.FloatTensor(sentences),
+                                torch.LongTensor(attention_masks))
         sampler = SequentialSampler(dataset)
         dataloader = DataLoader(dataset, sampler=sampler, batch_size=5,
                                 num_workers=1)
 
-
         for batch in dataloader:
-            # We're squeezing / unsqueezing the batch dim.
-            sentence = torch.tensor(sentence).to(self._device).unsqueeze(0)
-            mask = torch.tensor(mask).to(self._device).unsqueeze(0)
+            sentence, mask = batch
+            sentence = sentence.to(self._device)
+            mask = mask.to(self._device)
 
             with torch.no_grad():
                 logits = self._model(
                     sentence, token_type_ids=None, attention_mask=mask)[0]
 
             softmax = self._softmax(logits).detach().cpu().numpy()
-            labels[np.argmax(softmax, axis=1)] += 1  # Increment counter.
-            scores += softmax.squeeze()  # Remove batch dim and sum scores.
+            import IPython; IPython.embed()
+            # NEED TO SUM OVER BATCH DIM -- TEST THIS
+            for idx in np.argmax(softmax, axis=1):
+                labels[idx] += 1  # Increment counter.
+            scores += softmax.sum(0)  # Sum scores over batch dimension.
 
         scores /= n  # Take the mean.
         end_time = time.time()
