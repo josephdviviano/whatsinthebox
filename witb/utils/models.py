@@ -8,6 +8,7 @@ import torch.multiprocessing
 import time
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 import os
+import multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 
@@ -26,8 +27,6 @@ class SonarRunner():
 
     def query(self, doc):
         """Runs all sentences across cores."""
-
-
         labels = np.zeros(len(self.labels))  # Per sentence counts of labels.
         scores = np.zeros(len(self.labels))  # Mean score per label.
 
@@ -62,6 +61,7 @@ class DeLimitRunner():
             "Hate-speech-CNERG/dehatebert-mono-english")
         self.threshold = threshold
         self.max_sentences = int(max_sentences)
+        self._n_cpu = multiprocessing.cpu_count()
 
         if torch.cuda.is_available():
             self._device = torch.device("cuda")
@@ -74,7 +74,6 @@ class DeLimitRunner():
     def query(self, doc):
         """Runs all sentences across cores."""
         os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-        start_time = time.time()
         labels = np.zeros(len(self.labels))  # Per sentence counts of labels.
         scores = np.zeros(len(self.labels))  # Mean score per label.
 
@@ -101,10 +100,12 @@ class DeLimitRunner():
         if n == 0:
             return np.concatenate([labels, scores])
 
-        dataset = TensorDataset(torch.FloatTensor(sentences),
+        dataset = TensorDataset(torch.LongTensor(sentences),
                                 torch.LongTensor(attention_masks))
         sampler = SequentialSampler(dataset)
-        dataloader = DataLoader(dataset, sampler=sampler, batch_size=5,
+        dataloader = DataLoader(dataset,
+                                sampler=sampler,
+                                batch_size=self.max_sentences,
                                 num_workers=1)
 
         for batch in dataloader:
@@ -117,15 +118,16 @@ class DeLimitRunner():
                     sentence, token_type_ids=None, attention_mask=mask)[0]
 
             softmax = self._softmax(logits).detach().cpu().numpy()
-            import IPython; IPython.embed()
-            # NEED TO SUM OVER BATCH DIM -- TEST THIS
-            for idx in np.argmax(softmax, axis=1):
-                labels[idx] += 1  # Increment counter.
+
+            # Count sentences with each label.
+            idx = np.argmax(softmax, axis=1)
+            _labels = np.zeros(softmax.shape)
+            _labels[np.arange(_labels.shape[0]), idx] = 1
+            labels += _labels.sum(0)
+
             scores += softmax.sum(0)  # Sum scores over batch dimension.
 
         scores /= n  # Take the mean.
-        end_time = time.time()
-        print('doc in {} sec'.format(end_time-start_time))
 
         return np.concatenate([labels, scores])
 
