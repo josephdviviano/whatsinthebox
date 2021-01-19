@@ -10,6 +10,10 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 import os
 import multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
+from cc_net import dedup, execution, jsonql, minify, perplexity, process_wet_file,  text_normalizer
+import kenlm  # type: ignore
+import sentencepiece  # type: ignore
+
 
 
 #class PerplexityRunner():
@@ -131,7 +135,27 @@ class DeLimitRunner():
 
         return np.concatenate([labels, scores])
 
-# XPLAIN
-#    "0": "hate speech",
-#    "1": "normal",
-#    "2": "offensive"
+class PerplexRunner():
+    def __init__(self, threshold=20):
+        self.sp_model = sentencepiece.SentencePieceProcessor('/home/mila/l/lucciona/cc_net/data/lm_sp/en.sp.model')
+        self.model= kenlm.Model('/home/mila/l/lucciona/cc_net/data/lm_sp/en.arpa.bin')
+        self.threshold = threshold
+    def query(self, doc):
+        """Runs all sentences across cores."""
+
+        # Remove short sentences.
+        sentences = [s for s in doc.sentences if len(s) > self.threshold]
+        n = len(sentences)
+        score= 0.000
+
+        if n == 0:
+            return np.concatenate([labels, score])
+      
+        sentences = text_normalizer.normalize(sentences)
+        tokenized = sp.encode_as_pieces(sentences)
+        document= " ".join(tokenized)
+        log_score = model.score(document)
+        score= 10.0 ** (-log_score / 3)
+
+
+        return score

@@ -58,8 +58,12 @@ def count_ngram_matches(docs, ngrams):
 
 
 def run_perplexity(docs):
-    pass
+    perplexity= models.PerplexRunner()
+    results = []
+    for doc in docs:
+        results.append(perplexity.query(doc))
 
+    return np.vstack(results)
 
 def run_sonar(docs):
 
@@ -84,3 +88,27 @@ def run_delimit(docs):
     #results = p.map(delimit.query, docs)
 
     return np.vstack(results)
+
+'''
+
+def run_sonar(docs):
+
+    n_workers = multiprocessing.cpu_count()
+    p = Pool(n_workers)
+
+    sonar = models.SonarRunner()
+    results = p.map(sonar.query, docs)
+
+    return np.vstack(results)
+
+def run_sonar(docs):
+
+    n_workers = multiprocessing.cpu_count()
+    p = Pool(n_workers)
+
+    sonar = models.SonarRunner()
+    results = p.map(sonar.query, docs)
+
+    return np.vstack(results)
+
+'''
