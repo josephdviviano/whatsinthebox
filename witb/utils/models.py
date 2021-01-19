@@ -142,9 +142,12 @@ class PerplexRunner():
         #TODO: generalize these paths.
         self.sp_model = sentencepiece.SentencePieceProcessor(
             '/home/mila/l/lucciona/cc_net/data/lm_sp/en.sp.model')
-        self.model= kenlm.Model(
+        self._model= kenlm.Model(
             '/home/mila/l/lucciona/cc_net/data/lm_sp/en.arpa.bin')
         self.threshold = threshold
+        
+    def pp(log_score, length):
+        return 
 
     def query(self, doc):
         """Runs all sentences across cores."""
@@ -158,12 +161,13 @@ class PerplexRunner():
             return np.concatenate([labels, score])
 
         log_score, doc_length = 0, 0
+        
         for sentence in sentences:
             sentence = normalize_line(sentence)
-            sentence = sp.encode_as_pieces(sentence)
-            log_score += model.score(" ".join(sentence))
+            sentence = self.sp_model .encode_as_pieces(sentence)
+            log_score += self._model.score(" ".join(sentence))
             doc_length += len(sentence) + 1
 
-        score = (10.0 ** (-log_score / 3)) / doc_length
-
+        #score = (10.0 ** (-log_score / doc_length))
+        score = round(10.0 ** (-log_score/doc_length), 1)
         return score
