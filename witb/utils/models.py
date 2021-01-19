@@ -10,7 +10,8 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 import os
 import multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
-from cc_net import dedup, execution, jsonql, minify, perplexity, process_wet_file,  text_normalizer
+#from cc_net import dedup, execution, jsonql, minify, perplexity, process_wet_file,  text_normalizer
+from witb.utils.textutils import normalize_line
 import kenlm  # type: ignore
 import sentencepiece  # type: ignore
 
@@ -156,10 +157,13 @@ class PerplexRunner():
         if n == 0:
             return np.concatenate([labels, score])
 
-        sentences = text_normalizer.normalize(sentences)
-        tokenized = sp.encode_as_pieces(sentences)
-        document= " ".join(tokenized)
-        log_score = model.score(document)
-        score= 10.0 ** (-log_score / 3)
+        log_score, doc_length = 0, 0
+        for sentence in sentences:
+            sentence = normalize_line(sentence)
+            sentence = sp.encode_as_pieces(sentence)
+            log_score += model.score(" ".join(sentence))
+            doc_length += len(sentence) + 1
+
+        score = (10.0 ** (-log_score / 3)) / doc_length
 
         return score
