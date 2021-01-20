@@ -132,8 +132,6 @@ def main(args, working_dir):
     # Initalize the output dict.
     results = {'n_total_docs': n_total_docs, 'n_ok_docs': n_ok_docs}
 
-    import IPython; IPython.embed()
-
     # Flag docs for matching ngrams.
     ngram_results = nlp.count_ngram_matches(docs, ngrams)
 
