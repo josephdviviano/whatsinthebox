@@ -9,12 +9,12 @@ import functools
 import gzip
 import io
 import os
+import pickle
 import requests
 import sys
 import tempfile
 import time
 import urllib.request
-import pickle
 
 _session = functools.lru_cache()(requests.Session)
 
