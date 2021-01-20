@@ -6,7 +6,6 @@ for i in $(seq ${START} ${END}); do
     filename="witb_${i}"
     runscript="${filename}.pbs"
     cat << EOF > ${runscript}
-
 #!/bin/bash
 #SBATCH --job-name=${filename}
 #SBATCH --nodes=1-1
