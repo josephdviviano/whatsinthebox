@@ -9,7 +9,7 @@ for i in $(seq ${START} ${END}); do
 
 #!/bin/bash
 #SBATCH --job-name=${filename}
-#SBATCH --nodes=1
+#SBATCH --nodes=1-1
 #SBATCH --ntasks-per-node=8
 #SBATCH --output=../outputs/${filename}.log
 #SBATCH --error=../outputs/${filename}.err
@@ -26,7 +26,7 @@ python -u ../witb/main.py --remote=https://commoncrawl.s3.amazonaws.com/crawl-da
 
 EOF
 
-    srun ${runscript}
+    sbatch ${runscript}
     rm ${runscript}
 done
 
