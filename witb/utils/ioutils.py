@@ -80,7 +80,7 @@ def parse_data(entries, min_len=1, languages=['eng']):
         if len(doc.content) > min_len and doc.language in languages:
             doc.content = cleaner.clean(doc.content)
             n_ok += 1
-            yield doc
+            yield (doc, n_doc, n_ok)
 
     if n_doc > 0:
         logger.info(
