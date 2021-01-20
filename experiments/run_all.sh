@@ -1,6 +1,6 @@
 #!/bin/bash
 START=1
-END=720
+END=5
 
 for i in $(seq ${START} ${END}); do
     filename="witb_${i}"
