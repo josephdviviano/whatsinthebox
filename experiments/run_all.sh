@@ -3,7 +3,7 @@ START=1
 END=720
 
 for i in $(seq ${START} ${END}); do
-    filenae="witb_${i}"
+    filename="witb_${i}"
     runscript="${filename}.pbs"
     cat << EOF > ${runscript}
 
