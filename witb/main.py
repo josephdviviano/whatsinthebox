@@ -126,25 +126,28 @@ def main(args, working_dir):
 
     # Load all english documents, cleaned, into a list.
     docs = []
-    for doc in parsed_data:
+    for (doc, n_total_docs, n_ok_docs) in parsed_data:
         docs.append(doc)
 
-    # Flag docs for matching bigrams.
-    results = nlp.count_ngram_matches(docs, ngrams)
+    # Initalize the output dict.
+    results = {'n_total_docs': n_total_docs, 'n_ok_docs': n_ok_docs}
+
+    # Flag docs for matching ngrams.
+    ngram_results = nlp.count_ngram_matches(docs, ngrams)
 
     # Hate speech / offensive text detection.
     sonar_results = nlp.run_sonar(docs)
     delimit_results = nlp.run_delimit(docs)
 
-    # Get perplexity.
+    # Perplexity.
     perplexity_results = nlp.run_perplexity(docs)
-
 
     print('took {} MINS to parse all valid docs'.format(
         (time.time() - start_time) / 60 ))
 
     # Merge all results into a single dict.
-    results.update({'sonar': sonar_results,
+    results.update({'ngram': ngram_results,
+                    'sonar': sonar_results,
                     'delimit': delimit_results,
                     'perplexity': perplexity_results})
 

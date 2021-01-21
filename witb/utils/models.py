@@ -145,9 +145,9 @@ class PerplexRunner():
         self._model= kenlm.Model(
             '/home/mila/l/lucciona/cc_net/data/lm_sp/en.arpa.bin')
         self.threshold = threshold
-        
+
     def pp(log_score, length):
-        return 
+        return
 
     def query(self, doc):
         """Runs all sentences across cores."""
@@ -158,10 +158,10 @@ class PerplexRunner():
         score= 0.000
 
         if n == 0:
-            return np.concatenate([labels, score])
+            return -np.inf  # Worst possible perplexity.
 
         log_score, doc_length = 0, 0
-        
+
         for sentence in sentences:
             sentence = normalize_line(sentence)
             sentence = self.sp_model .encode_as_pieces(sentence)

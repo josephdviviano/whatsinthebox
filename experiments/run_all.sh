@@ -1,15 +1,14 @@
 #!/bin/bash
 START=1
-END=720
+END=5
 
 for i in $(seq ${START} ${END}); do
     filename="witb_${i}"
     runscript="${filename}.pbs"
     cat << EOF > ${runscript}
-
 #!/bin/bash
 #SBATCH --job-name=${filename}
-#SBATCH --nodes=1
+#SBATCH --nodes=1-1
 #SBATCH --ntasks-per-node=8
 #SBATCH --output=../outputs/${filename}.log
 #SBATCH --error=../outputs/${filename}.err
@@ -26,7 +25,7 @@ python -u ../witb/main.py --remote=https://commoncrawl.s3.amazonaws.com/crawl-da
 
 EOF
 
-    srun ${runscript}
+    sbatch ${runscript}
     rm ${runscript}
 done
 
