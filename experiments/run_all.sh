@@ -1,27 +1,28 @@
 #!/bin/bash
-START=1
-END=5
+i=0
+for f in $(ls /path/to/files/); do 
+	input=${f}
+	output=path/to/output/dir/witb_${i}.pkl
+	i=$((i+1))  # this iterates a counter
+	done
 
-for i in $(seq ${START} ${END}); do
-    filename="witb_${i}"
-    runscript="${filename}.pbs"
-    cat << EOF > ${runscript}
 #!/bin/bash
-#SBATCH --job-name=${filename}
+#SBATCH --job-name=witb_${i}
 #SBATCH --nodes=1-1
 #SBATCH --ntasks-per-node=8
-#SBATCH --output=../outputs/${filename}.log
-#SBATCH --error=../outputs/${filename}.err
+#SBATCH --output=../outputs/witb_${i}.log
+#SBATCH --error=../outputs/with${i}.err
 #SBATCH --time=6:00:00
 #SBATCH --mem=16Gb
 #SBATCH --gres=gpu:1
+#SBATCH --account=rrg-bengioy-ad
 
 hostname
 source $HOME/.bashrc
 source activate perplex
 echo "running on shard ${i}/${END}"
 
-python -u ../witb/main.py --remote=https://commoncrawl.s3.amazonaws.com/crawl-data/CC-MAIN-2020-50/wet.paths.gz --idx=${i} --output=../outputs/${filename}.pkl
+python -u ../witb/main.py --file=/home/sashalu/CCdata/ --output=../outputs/witb_${i}.pkl
 
 EOF
 
