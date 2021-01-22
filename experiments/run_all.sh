@@ -1,11 +1,11 @@
 #!/bin/bash
 i=0
-for f in $(ls /path/to/files/); do 
-	input=${f}
-	output=path/to/output/dir/witb_${i}.pkl
-	i=$((i+1))  # this iterates a counter
-	done
-
+DATA_PATH="/home/sashalu/CCdata/"
+for f in $(ls ${DATA_PATH}); do
+	input="${DATA_PATH}/${f}"
+    filename="witb_${i}"
+    runscript="${filename}.pbs"
+    cat << EOF > ${runscript}
 #!/bin/bash
 #SBATCH --job-name=witb_${i}
 #SBATCH --nodes=1-1
@@ -20,12 +20,13 @@ for f in $(ls /path/to/files/); do
 hostname
 source $HOME/.bashrc
 source activate perplex
-echo "running on shard ${i}/${END}"
+echo "running on shard ${input}"
 
-python -u ../witb/main.py --file=/home/sashalu/CCdata/ --output=../outputs/witb_${i}.pkl
+python -u ../witb/main.py --file=${input} --output=../outputs/${filename}.pkl
 
 EOF
 
+	i=$((i+1))  # this iterates a counter
     sbatch ${runscript}
     rm ${runscript}
 done
