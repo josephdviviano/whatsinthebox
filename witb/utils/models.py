@@ -14,7 +14,7 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 from witb.utils.textutils import normalize_line
 import kenlm  # type: ignore
 import sentencepiece  # type: ignore
-
+from copy import copy
 
 
 #class PerplexityRunner():
@@ -45,10 +45,12 @@ class SonarRunner():
         for sentence in sentences:
             result = self._model.ping(text=sentence)
             labels[self.labels[result['top_class']]] += 1  # Top class count.
-
+            if result['top_class'] == 'hate_speech':
+                print("SONAR ", sentence)
             # Gets the numeric score for each class per sentence.
             for r in result['classes']:
                 scores[self.labels[r['class_name']]] += r['confidence']
+                
 
         scores /= n  # Take the mean.
 
@@ -89,8 +91,10 @@ class DeLimitRunner():
         # Do the first n sentences only so we cap runtime.
         if len(sentences) > self.max_sentences:
             sentences = sentences[:self.max_sentences]
-
+        
+        raw_sentences = copy(sentences)
         sentences = ["[CLS] " + s + " [SEP]" for s in sentences]
+        sentencetexts=[s for s in sentences]
         sentences = [self._tokenizer.tokenize(
             s, padding='max_length', truncation=True) for s in sentences]
         sentences = [
@@ -113,7 +117,9 @@ class DeLimitRunner():
                                 batch_size=self.max_sentences,
                                 num_workers=1)
 
-        for batch in dataloader:
+        for i, batch in enumerate(dataloader):
+            batch_size=self.max_sentences
+            batch_indices = np.arange(0+batch_size*i, batch_size+batch_size*i)
             sentence, mask = batch
             sentence = sentence.to(self._device)
             mask = mask.to(self._device)
@@ -123,9 +129,11 @@ class DeLimitRunner():
                     sentence, token_type_ids=None, attention_mask=mask)[0]
 
             softmax = self._softmax(logits).detach().cpu().numpy()
-
             # Count sentences with each label.
             idx = np.argmax(softmax, axis=1)
+            sentence_idx = batch_indices[idx]
+            #HELP
+            #print("DELIMIT :", raw_sentences[sentence_idx])
             _labels = np.zeros(softmax.shape)
             _labels[np.arange(_labels.shape[0]), idx] = 1
             labels += _labels.sum(0)

@@ -49,9 +49,12 @@ def count_ngram_matches(docs, ngrams):
 
     for doc in docs:
         bigrams = get_ngrams(doc.content, unigrams=True, bigrams=True)
-
         for k in ngrams.keys():
             count = sum([b in ngrams[k] for b in bigrams])
+            if k == "hate-speech" and count >3 :
+                for b in ngrams[k]:
+                    if b in bigrams:
+                        print('NGRAMS ', b)
             flagged[k].append(count)
 
     return flagged
