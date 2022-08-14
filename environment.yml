@@ -5,6 +5,7 @@ channels:
   - pytorch
 dependencies:
   - conda-forge:transformers
+  - requests
   - jupyter
   - matplotlib
   - pandas
