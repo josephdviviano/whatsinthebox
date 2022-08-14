@@ -1,0 +1,12 @@
+ngrams:
+  pornography:
+    - "porn-ngrams/porn_bigrams_filtered.csv"
+    - "porn-ngrams/porn_trigrams.csv"
+    #- "porn-ngrams/porn_blacklist_filtered.csv"
+    #- "porn-ngrams/porn_trigrams_top_k_users.csv"
+    #- "porn-ngrams/porn_quadgrams.csv"
+  profanity:
+    - "profanity/profane_words.txt"
+  #violence:
+  hate-speech:
+    -  "hatebase_dict.csv"

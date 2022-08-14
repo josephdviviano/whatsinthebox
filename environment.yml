@@ -1,0 +1,20 @@
+name: witb
+channels:
+  - conda-forge
+  - defaults
+  - pytorch
+dependencies:
+  - conda-forge:transformers
+  - requests
+  - jupyter
+  - matplotlib
+  - pandas
+  - scikit-learn
+  - scipy
+  - seaborn
+  - yaml
+  - pytorch:pytorch
+  - pytorch:codatoolkit==10.2
+pip:
+  - hatesonar
+  - kenlm

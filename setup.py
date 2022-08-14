@@ -9,12 +9,6 @@ setup(
     version='0.0.1',
     packages=find_packages(include=['witb', 'witb.*']),
     python_requires='>=3.6',
-    install_requires=[
-        'numpy',
-        'scipy',
-        'matplotlib',
-        'seaborn',
-        'nltk'],
     entry_points={
         'console_scripts': [
             'main=witb.main:main'
